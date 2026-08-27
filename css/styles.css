@@ -489,6 +489,8 @@ html, body{
   padding: 4px 6px;
 }
 .prop-field input[type=color]{ width: 34px; height: 26px; border:none; background:transparent; cursor:pointer; }
+.prop-color-wrap{ display:flex; align-items:center; gap:6px; }
+.prop-color-wrap .hex-input{ width: 72px; }
 .prop-readonly{
   font-family: var(--mono);
   font-size: 12px;

@@ -15,6 +15,7 @@ import { DropZone } from './dropZone.js';
 import { AssetScriptManager } from './assetScriptManager.js';
 import { Outliner } from './outliner.js';
 import { PropertyInspector } from './propertyInspector.js';
+import { CanvasEditor } from './canvasEditor.js';
 
 export class UIController {
   constructor({ state, sceneManager, renderer, canvas, ingestionManager, historyStack }) {
@@ -23,7 +24,8 @@ export class UIController {
     this.historyStack = historyStack;
 
     this.inspector = new Inspector({ state });
-    this.assetPalette = new AssetPalette({ state, sceneManager, renderer, canvas });
+    this.assetPalette = new AssetPalette({ state });
+    this.canvasEditor = new CanvasEditor({ state, sceneManager, renderer, canvas });
     this.environmentStyler = new EnvironmentStyler({ state, sceneManager });
     this.sceneManagerUI = new SceneManagerUI({ state, sceneManager });
     this.outliner = new Outliner({ state, sceneManager });
@@ -70,7 +72,7 @@ export class UIController {
       modeBtn.classList.toggle('active', editMode);
       modeBtn.textContent = editMode ? '▶ Play Mode' : '✎ Edit Mode';
       banner.classList.toggle('hidden', !editMode);
-      this.canvas.style.cursor = editMode ? 'copy' : 'crosshair';
+      // cursor itself is owned by CanvasEditor (it varies by armed tool, not just mode)
     });
 
     pauseBtn.addEventListener('click', () => {

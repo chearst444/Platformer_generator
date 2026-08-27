@@ -11,6 +11,15 @@ import { bus } from '../state/eventBus.js';
 import { assetLoader } from '../assets/assetLoader.js';
 import { behaviorRegistry } from '../ingestion/behaviorRegistry.js';
 
+const HEX_RE = /^#?([0-9a-f]{6})$/i;
+const SWAPPABLE_GROUPS = [
+  { category: 'platform', label: 'Platforms' },
+  { category: 'obstacle', label: 'Obstacles' },
+  { category: 'collectible', label: 'Collectibles' },
+  { category: 'trigger', label: 'Triggers' },
+  { category: 'actor', label: 'Actors' },
+];
+
 export class PropertyInspector {
   constructor({ state, sceneManager }) {
     this.state = state;
@@ -56,6 +65,7 @@ export class PropertyInspector {
     const def = assetLoader.getDef(entity.tileType);
 
     this._heading(`${capitalize(sel.category)} — ${def?.label || entity.tileType}`);
+    this._typeSwapField(sel, entity);
     this._numberField('X', Math.round(entity.x), (v) => this._commitEntity(entity, { x: v }));
     this._numberField('Y', Math.round(entity.y), (v) => this._commitEntity(entity, { y: v }));
     this._numberField('Width', entity.w, (v) => this._commitEntity(entity, { w: Math.max(4, v) }));
@@ -93,6 +103,38 @@ export class PropertyInspector {
         emptyLabel: names.length ? 'choose one…' : 'no scripts registered — drop a .js plugin first',
       });
     }
+  }
+
+  /** Object Swapping: hot-swap what this placed entity IS, across any category, without delete+recreate. */
+  _typeSwapField(sel, entity) {
+    const row = document.createElement('div');
+    row.className = 'prop-field';
+    const lab = document.createElement('label');
+    lab.textContent = 'Object Type';
+    const select = document.createElement('select');
+
+    SWAPPABLE_GROUPS.forEach(({ category, label }) => {
+      const defs = assetLoader.getByCategory(category);
+      if (!defs.length) return;
+      const optgroup = document.createElement('optgroup');
+      optgroup.label = label;
+      defs.forEach((def) => {
+        const opt = document.createElement('option');
+        opt.value = `${category}|${def.id}`;
+        opt.textContent = def.label;
+        if (category === sel.category && def.id === entity.tileType) opt.selected = true;
+        optgroup.appendChild(opt);
+      });
+      select.appendChild(optgroup);
+    });
+
+    select.addEventListener('change', () => {
+      const [newCategory, newTileType] = select.value.split('|');
+      const swapped = this.sceneManager.swapEntityType(sel.category, entity.id, newCategory, newTileType);
+      if (swapped) this.state.select({ category: newCategory, id: swapped.id });
+    });
+    row.append(lab, select);
+    this.root.appendChild(row);
   }
 
   _commitEntity(entity, patch) {
@@ -151,11 +193,27 @@ export class PropertyInspector {
     row.className = 'prop-field';
     const lab = document.createElement('label');
     lab.textContent = label;
-    const input = document.createElement('input');
-    input.type = 'color';
-    input.value = value;
-    input.addEventListener('input', () => onCommit(input.value));
-    row.append(lab, input);
+
+    const wrap = document.createElement('span');
+    wrap.className = 'prop-color-wrap';
+    const swatch = document.createElement('input');
+    swatch.type = 'color';
+    swatch.value = value;
+    const hex = document.createElement('input');
+    hex.type = 'text';
+    hex.className = 'hex-input';
+    hex.maxLength = 7;
+    hex.value = value;
+
+    swatch.addEventListener('input', () => { hex.value = swatch.value; onCommit(swatch.value); });
+    hex.addEventListener('change', () => {
+      const m = HEX_RE.exec(hex.value.trim());
+      if (m) { const v = `#${m[1]}`; swatch.value = v; hex.value = v; onCommit(v); }
+      else hex.value = swatch.value; // reject invalid input, restore last good value
+    });
+
+    wrap.append(swatch, hex);
+    row.append(lab, wrap);
     this.root.appendChild(row);
   }
 

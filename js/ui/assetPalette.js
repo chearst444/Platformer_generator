@@ -1,14 +1,14 @@
 // ===========================================================
-// AssetPalette — drag-and-drop / click-to-select tray for
-// platforms, obstacles, collectibles and triggers, plus the
-// custom-sprite uploader. Selecting (or dragging) a tile and
-// then clicking/dropping on the canvas places it into the
-// active scene through SceneManager. Only active in Edit Mode.
+// AssetPalette — the sidebar tray of placeable platforms,
+// obstacles, collectibles, triggers and plugin-registered
+// actors, plus the custom-sprite uploader and eraser toggle.
+// Selecting (click) or dragging a tile out of here arms the
+// "brush" that CanvasEditor reads when the canvas is clicked or
+// dropped onto — this module only owns the tray UI itself.
 // ===========================================================
 
 import { bus } from '../state/eventBus.js';
 import { assetLoader } from '../assets/assetLoader.js';
-import { worldToScene, snapToGrid } from '../engine/renderer.js';
 
 const TRAYS = {
   platform: 'palette-platforms',
@@ -19,16 +19,12 @@ const TRAYS = {
 };
 
 export class AssetPalette {
-  constructor({ state, sceneManager, renderer, canvas }) {
+  constructor({ state }) {
     this.state = state;
-    this.sceneManager = sceneManager;
-    this.renderer = renderer;
-    this.canvas = canvas;
     this.eraseBtn = document.getElementById('palette-erase-btn');
 
     this._renderTrays();
     this._bindUpload();
-    this._bindCanvasPlacement();
     this._bindEraser();
     bus.on('assets:changed', () => this._renderTrays());
     bus.on('brush:changed', () => this._syncSelection());
@@ -109,49 +105,5 @@ export class AssetPalette {
       this.state.setActiveBrush(active ? { category: 'eraser' } : null);
       document.querySelectorAll('.palette-item').forEach((el) => el.classList.remove('selected'));
     });
-  }
-
-  _bindCanvasPlacement() {
-    this.canvas.addEventListener('dragover', (e) => e.preventDefault());
-    this.canvas.addEventListener('drop', (e) => {
-      e.preventDefault();
-      const raw = e.dataTransfer.getData('text/plain');
-      if (!raw) return;
-      const { category, tileType } = JSON.parse(raw);
-      this.state.setActiveBrush({ category, tileType });
-      this._placeAt(e.clientX, e.clientY);
-    });
-
-    this.canvas.addEventListener('click', (e) => {
-      if (!this.state.editMode) return;
-
-      if (!this.state.activeBrush) {
-        // No tool selected: clicking picks whatever's under the cursor for the
-        // Outliner / Property Inspector, same as clicking its row in the tree.
-        const { x, y } = worldToScene(this.canvas, this.renderer.camera, e.clientX, e.clientY);
-        const p = this.state.player;
-        if (x >= p.x && x <= p.x + p.width && y >= p.y && y <= p.y + p.height) {
-          this.state.select({ category: 'player', id: 'player' });
-          return;
-        }
-        const hit = this.sceneManager.findEntityAt(x, y);
-        this.state.select(hit ? { category: hit.category, id: hit.entity.id } : null);
-        return;
-      }
-
-      if (this.state.activeBrush.category === 'eraser') {
-        const { x, y } = worldToScene(this.canvas, this.renderer.camera, e.clientX, e.clientY);
-        this.sceneManager.eraseAt(x, y);
-      } else {
-        this._placeAt(e.clientX, e.clientY);
-      }
-    });
-  }
-
-  _placeAt(clientX, clientY) {
-    const brush = this.state.activeBrush;
-    if (!brush || brush.category === 'eraser') return;
-    const { x, y } = worldToScene(this.canvas, this.renderer.camera, clientX, clientY);
-    this.sceneManager.addEntity(brush.category, brush.tileType, snapToGrid(x), snapToGrid(y));
   }
 }

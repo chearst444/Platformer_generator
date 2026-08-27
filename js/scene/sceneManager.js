@@ -22,6 +22,10 @@ const CATEGORY_TO_BUCKET = {
 };
 const BUCKET_TO_CATEGORY = Object.fromEntries(Object.entries(CATEGORY_TO_BUCKET).map(([k, v]) => [v, k]));
 const HIT_TEST_ORDER = ['collectibles', 'obstacles', 'triggers', 'actors', 'platforms'];
+const DEFAULT_SIZE = {
+  platform: { w: 32, h: 32 }, obstacle: { w: 32, h: 32 }, collectible: { w: 24, h: 24 },
+  trigger: { w: 32, h: 48 }, actor: { w: 32, h: 32 },
+};
 
 export class SceneManager {
   constructor({ state }) {
@@ -293,6 +297,40 @@ export class SceneManager {
   notifyEntityEdited() {
     this.persist();
     bus.emit('scene:edited', this.getActiveScene());
+  }
+
+  /**
+   * Object Swapping: hot-swap what an already-placed entity IS — its
+   * category and/or tileType (e.g. a plain obstacle becomes a trigger
+   * "door", or a coin becomes a gem) — in place. Position, tint and
+   * components (collision box / script) all carry over untouched, since
+   * it's the same underlying entity object just relabeled and (if the
+   * category changed) moved into the matching bucket with that
+   * category's default size.
+   */
+  swapEntityType(category, id, newCategory, newTileType) {
+    const scene = this.getActiveScene();
+    if (!scene) return null;
+    const oldList = scene[bucketFor(category)];
+    const idx = oldList?.findIndex((e) => e.id === id) ?? -1;
+    if (idx === -1) return null;
+    const entity = oldList[idx];
+
+    if (newCategory !== category) {
+      oldList.splice(idx, 1);
+      const size = DEFAULT_SIZE[newCategory] || { w: 32, h: 32 };
+      entity.w = size.w;
+      entity.h = size.h;
+      if (newCategory === 'trigger' && !entity.meta.nextScene) entity.meta.nextScene = this._defaultNextScene(scene.id);
+      scene[bucketFor(newCategory)].push(entity);
+    }
+    entity.category = newCategory;
+    entity.tileType = newTileType;
+    entity.collected = false; // in case a spent collectible is becoming something else
+
+    this.persist();
+    bus.emit('scene:edited', scene);
+    return entity;
   }
 }
 

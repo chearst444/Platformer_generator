@@ -33,7 +33,8 @@ Without it, the app still runs as a static page (`npm run static`, or any static
 - **Universal Drop Zone** — drag local `.js` / `.html` / `.css` / `.py` files here (or click to browse); each is routed by extension — see [File Ingestion](#multi-language-file-ingestion) below.
 - **Asset & Script Manager** — a file tree of everything you've ingested: toggle, inline-edit, re-run (Python) or delete each one.
 - **Node & Component Hierarchy** — an outliner tree listing the Player and every placed entity, grouped by type. Attach a **Collision Box** (a custom hit-box) or a **Script** component (any registered plugin behavior) to *any* node — not just purpose-built actors.
-- **Property Inspector** — a dynamic property grid for whatever's selected (canvas click in Edit Mode, or the tree): the Player shows Max Health / Move Speed; a coin shows Value / Heal Amount / Rotation Speed; an obstacle shows Damage; a trigger shows its linked scene; a component shows its own fields.
+- **Property Inspector** — a dynamic property grid for whatever's selected (canvas click in Edit Mode, or the tree): the Player shows Max Health / Move Speed; a coin shows Value / Heal Amount / Rotation Speed; an obstacle shows Damage; a trigger shows its linked scene; a component shows its own fields. Every entity also gets a **Tint** color picker + hex field, and an **Object Type** dropdown to hot-swap what it is (grouped by category) — e.g. turn a plain obstacle into a trigger "door", a coin into a gem, or any tile into a registered actor — in place, keeping its position and any attached components.
+- **Direct Canvas Manipulation** — in Edit Mode with no palette tile armed, click any entity (or the Player) on the canvas to select it, or click-and-drag to reposition it freely (no grid snapping) with X/Y updating live; release to commit. With a palette tile armed, clicking places it (snapped to the grid); the eraser removes on click. Cursor hints (`grab`/`grabbing`/`copy`) show which mode is active.
 - **Scene Manager** — create, rename, delete, switch between and link scenes, and set each scene's **mode** (Platformer or Top-Down) independently.
 - **Physics panel** — real-time sliders for gravity, jump velocity, move speed and friction.
 - **Asset Palette** — click-to-select or drag-and-drop platforms, obstacles, collectibles, triggers, and any custom **Actor** tiles registered by a dropped script. Upload a custom sprite image. Eraser tool included.
@@ -119,7 +120,8 @@ js/
   ui/
     inspector.js, assetPalette.js, environmentStyler.js, sceneManagerUI.js   original panels
     outliner.js                node & component hierarchy tree
-    propertyInspector.js        dynamic per-selection property grid
+    propertyInspector.js        dynamic per-selection property grid (tint+hex, object-type swap, ...)
+    canvasEditor.js              direct canvas manipulation: select/drag-to-move, place, erase
     dropZone.js                 Universal Drop Zone
     assetScriptManager.js        ingested-file tree (toggle/edit/run/delete)
     console.js, consoleLogBuffer.js   developer console + collapsible error drawer
