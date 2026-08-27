@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Platformer Sandbox &mdash; Live Editor</title>
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<div id="app">
+
+  <header id="topbar">
+    <div class="brand">
+      <span class="brand-icon">&#9654;</span>
+      <span class="brand-name">Platformer Sandbox</span>
+    </div>
+    <div class="topbar-actions">
+      <span id="fps-counter" class="fps-counter">60 fps</span>
+      <button id="toggle-mode-btn" class="btn btn-accent" title="Toggle between Play and Edit mode">&#9998; Edit Mode</button>
+      <button id="pause-btn" class="btn" title="Pause / resume the simulation">&#10074;&#10074; Pause</button>
+    </div>
+  </header>
+
+  <main id="layout">
+
+    <!-- ============== CANVAS VIEWPORT ============== -->
+    <section id="viewport">
+      <div id="canvas-wrap">
+        <canvas id="game-canvas" width="960" height="540" tabindex="0"></canvas>
+        <div id="hud">
+          <div class="hud-item" id="hud-health">&hearts; <span id="hud-health-val">100</span></div>
+          <div class="hud-item" id="hud-score">&#9733; <span id="hud-score-val">0</span></div>
+          <div class="hud-item" id="hud-inventory">&#127942; <span id="hud-inventory-val">0</span></div>
+          <div class="hud-item" id="hud-scene">&#127760; <span id="hud-scene-val">-</span></div>
+        </div>
+        <div id="edit-banner" class="hidden">EDIT MODE &mdash; click / drag tiles from the palette onto the level</div>
+      </div>
+
+      <!-- ============== DEVELOPER COMMAND CONSOLE ============== -->
+      <div id="console-panel">
+        <div id="console-log" aria-live="polite"></div>
+        <form id="console-form" autocomplete="off">
+          <span class="console-prompt">&gt;</span>
+          <input id="console-input" type="text" placeholder="/help for commands  e.g. /gravity 0.6, /spawn coin, /load scene_2" />
+        </form>
+      </div>
+    </section>
+
+    <!-- ============== SIDEBAR INSPECTOR ============== -->
+    <aside id="sidebar">
+
+      <div class="panel" id="panel-scenes">
+        <h2>Scene Manager</h2>
+        <div id="scene-list"></div>
+        <div class="scene-actions">
+          <button id="scene-new-btn" class="btn btn-small">+ New Scene</button>
+        </div>
+        <div class="field-row">
+          <label for="scene-next-select">Links to next scene</label>
+          <select id="scene-next-select"></select>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-physics">
+        <h2>Physics</h2>
+        <div class="slider-field" data-key="gravity">
+          <label>Gravity <span class="val-badge" id="val-gravity">0.6</span></label>
+          <input type="range" id="slider-gravity" min="0.1" max="2" step="0.01" />
+        </div>
+        <div class="slider-field" data-key="jumpVelocity">
+          <label>Jump Velocity <span class="val-badge" id="val-jumpVelocity">14</span></label>
+          <input type="range" id="slider-jumpVelocity" min="4" max="30" step="0.5" />
+        </div>
+        <div class="slider-field" data-key="moveSpeed">
+          <label>Move Speed <span class="val-badge" id="val-moveSpeed">5</span></label>
+          <input type="range" id="slider-moveSpeed" min="1" max="12" step="0.1" />
+        </div>
+        <div class="slider-field" data-key="friction">
+          <label>Friction <span class="val-badge" id="val-friction">0.85</span></label>
+          <input type="range" id="slider-friction" min="0.5" max="0.99" step="0.01" />
+        </div>
+      </div>
+
+      <div class="panel" id="panel-palette">
+        <h2>Asset Palette</h2>
+        <div class="palette-group">
+          <h3>Platforms</h3>
+          <div id="palette-platforms" class="palette-tray"></div>
+        </div>
+        <div class="palette-group">
+          <h3>Obstacles</h3>
+          <div id="palette-obstacles" class="palette-tray"></div>
+        </div>
+        <div class="palette-group">
+          <h3>Collectibles</h3>
+          <div id="palette-collectibles" class="palette-tray"></div>
+        </div>
+        <div class="palette-group">
+          <h3>Triggers</h3>
+          <div id="palette-triggers" class="palette-tray"></div>
+        </div>
+        <div class="palette-group">
+          <label class="upload-label" for="sprite-upload">+ Upload custom sprite</label>
+          <input type="file" id="sprite-upload" accept="image/*" hidden />
+        </div>
+        <button id="palette-erase-btn" class="btn btn-small btn-danger">Eraser</button>
+      </div>
+
+      <div class="panel" id="panel-environment">
+        <h2>Environment Styler</h2>
+        <div class="color-field">
+          <label for="color-sky">Sky / Background</label>
+          <input type="color" id="color-sky" />
+          <input type="text" id="hex-sky" class="hex-input" maxlength="7" />
+        </div>
+        <div class="color-field">
+          <label for="color-tint">Tile Tint</label>
+          <input type="color" id="color-tint" />
+          <input type="text" id="hex-tint" class="hex-input" maxlength="7" />
+        </div>
+        <div class="color-field">
+          <label for="color-ground">Ground / Floor</label>
+          <input type="color" id="color-ground" />
+          <input type="text" id="hex-ground" class="hex-input" maxlength="7" />
+        </div>
+      </div>
+
+    </aside>
+  </main>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

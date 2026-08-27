@@ -1,0 +1,4 @@
+{
+  "scenes": ["scene_1", "scene_2"],
+  "startScene": "scene_1"
+}

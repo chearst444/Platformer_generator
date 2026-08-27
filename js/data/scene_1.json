@@ -1,0 +1,38 @@
+{
+  "id": "scene_1",
+  "name": "Grasslands",
+  "width": 3200,
+  "height": 540,
+  "spawn": { "x": 64, "y": 400 },
+  "background": { "color": "#5c94fc", "tileTint": null, "groundColor": null },
+  "platforms": [
+    { "tileType": "grass", "x": 0,    "y": 492, "w": 640,  "h": 48 },
+    { "tileType": "grass", "x": 800,  "y": 492, "w": 700,  "h": 48 },
+    { "tileType": "grass", "x": 1620, "y": 492, "w": 1580, "h": 48 },
+    { "tileType": "stone", "x": 680,  "y": 420, "w": 96,   "h": 24 },
+    { "tileType": "stone", "x": 300,  "y": 380, "w": 128,  "h": 24 },
+    { "tileType": "brick", "x": 980,  "y": 340, "w": 128,  "h": 24 },
+    { "tileType": "ice",   "x": 1750, "y": 380, "w": 160,  "h": 24 },
+    { "tileType": "stone", "x": 2100, "y": 300, "w": 128,  "h": 24 },
+    { "tileType": "brick", "x": 2500, "y": 380, "w": 160,  "h": 24 }
+  ],
+  "obstacles": [
+    { "tileType": "spike", "x": 1000, "y": 460, "w": 32, "h": 32 },
+    { "tileType": "saw",   "x": 1850, "y": 340, "w": 32, "h": 32 },
+    { "tileType": "spike", "x": 2700, "y": 460, "w": 64, "h": 32 }
+  ],
+  "collectibles": [
+    { "tileType": "coin",  "x": 150,  "y": 440 },
+    { "tileType": "coin",  "x": 350,  "y": 340 },
+    { "tileType": "coin",  "x": 700,  "y": 380 },
+    { "tileType": "coin",  "x": 1000, "y": 300 },
+    { "tileType": "heart", "x": 1300, "y": 440 },
+    { "tileType": "coin",  "x": 1780, "y": 340 },
+    { "tileType": "gem",   "x": 2100, "y": 250 },
+    { "tileType": "coin",  "x": 2550, "y": 340 },
+    { "tileType": "coin",  "x": 2900, "y": 440 }
+  ],
+  "triggers": [
+    { "tileType": "exit", "x": 3140, "y": 396, "w": 32, "h": 96, "meta": { "nextScene": "scene_2" } }
+  ]
+}
