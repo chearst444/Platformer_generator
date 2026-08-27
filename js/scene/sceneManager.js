@@ -10,11 +10,18 @@ import { bus } from '../state/eventBus.js';
 import { createPlatform } from '../entities/platform.js';
 import { createCollectible } from '../entities/collectible.js';
 import { createObstacle, createTrigger } from '../entities/obstacle.js';
+import { createActor } from '../entities/actor.js';
 import { nextEntityId } from '../assets/assetLoader.js';
 import { DEFAULT_MANIFEST, DEFAULT_SCENES, blankScene } from '../data/defaultScenes.js';
-import { aabbOverlap } from '../entities/entity.js';
+import { aabbOverlap, effectiveBounds } from '../entities/entity.js';
 
 const STORAGE_KEY = 'platformer_sandbox_scenes_v1';
+
+const CATEGORY_TO_BUCKET = {
+  platform: 'platforms', obstacle: 'obstacles', collectible: 'collectibles', trigger: 'triggers', actor: 'actors',
+};
+const BUCKET_TO_CATEGORY = Object.fromEntries(Object.entries(CATEGORY_TO_BUCKET).map(([k, v]) => [v, k]));
+const HIT_TEST_ORDER = ['collectibles', 'obstacles', 'triggers', 'actors', 'platforms'];
 
 export class SceneManager {
   constructor({ state }) {
@@ -131,6 +138,31 @@ export class SceneManager {
     return true;
   }
 
+  setMode(id, mode) {
+    const scene = this.scenes.get(id);
+    if (!scene || (mode !== 'platformer' && mode !== 'topdown')) return false;
+    scene.mode = mode;
+    this.persist();
+    bus.emit('scene:edited', scene);
+    return true;
+  }
+
+  /**
+   * Add an externally-produced scene (e.g. a procedural level generator's
+   * .py stdout, run through the console's /runscript --scene) to the
+   * scene list. Missing fields fall back to a blank scene's defaults.
+   */
+  importScene(rawScene) {
+    const base = blankScene(nextEntityId('scene'), rawScene?.name || 'Generated Scene');
+    const merged = { ...base, ...rawScene, id: rawScene?.id && !this.scenes.has(rawScene.id) ? rawScene.id : base.id };
+    const scene = hydrate(merged);
+    this.scenes.set(scene.id, scene);
+    this.order.push(scene.id);
+    this.persist();
+    bus.emit('scenes:list-changed', this.getAllScenes());
+    return scene.id;
+  }
+
   /** Point (or create) this scene's single exit trigger at another scene. */
   setNextScene(id, nextId) {
     const scene = this.scenes.get(id);
@@ -145,7 +177,7 @@ export class SceneManager {
       trigger.meta.nextScene = nextId || null;
     }
     this.persist();
-    bus.emit('scene:changed', scene);
+    bus.emit('scene:edited', scene);
     return true;
   }
 
@@ -161,6 +193,7 @@ export class SceneManager {
     else if (category === 'obstacle') entity = createObstacle({ tileType, x, y });
     else if (category === 'collectible') entity = createCollectible({ tileType, x, y });
     else if (category === 'trigger') entity = createTrigger({ tileType, x, y, nextScene: this._defaultNextScene(scene.id) });
+    else if (category === 'actor') entity = createActor({ tileType, x, y });
     else return null;
 
     scene[bucketFor(category)].push(entity);
@@ -178,7 +211,7 @@ export class SceneManager {
     const scene = this.getActiveScene();
     if (!scene) return false;
     const point = { left: x, right: x + 1, top: y, bottom: y + 1 };
-    for (const category of ['collectibles', 'obstacles', 'triggers', 'platforms']) {
+    for (const category of ['collectibles', 'obstacles', 'triggers', 'actors', 'platforms']) {
       const list = scene[category];
       for (let i = list.length - 1; i >= 0; i--) {
         if (aabbOverlap(point, list[i].bounds)) {
@@ -197,16 +230,81 @@ export class SceneManager {
     if (!scene) return null;
     return JSON.stringify(serialize(scene), null, 2);
   }
+
+  // ---------------------------------------------------------------
+  // Outliner / Property Inspector support: lookup, removal-by-id, and
+  // the hierarchy tree's child "components" (collision box / script).
+  // ---------------------------------------------------------------
+  findEntity(category, id) {
+    const scene = this.getActiveScene();
+    if (!scene) return null;
+    return (scene[bucketFor(category)] || []).find((e) => e.id === id) || null;
+  }
+
+  /** Topmost entity whose (component-aware) bounds contain a world point. Used for click-to-select. */
+  findEntityAt(x, y) {
+    const scene = this.getActiveScene();
+    if (!scene) return null;
+    const point = { left: x, right: x + 1, top: y, bottom: y + 1 };
+    for (const bucket of HIT_TEST_ORDER) {
+      const list = scene[bucket];
+      for (let i = list.length - 1; i >= 0; i--) {
+        if (aabbOverlap(point, effectiveBounds(list[i]))) return { category: BUCKET_TO_CATEGORY[bucket], entity: list[i] };
+      }
+    }
+    return null;
+  }
+
+  removeEntity(category, id) {
+    const scene = this.getActiveScene();
+    if (!scene) return false;
+    const list = scene[bucketFor(category)];
+    if (!list) return false;
+    const idx = list.findIndex((e) => e.id === id);
+    if (idx === -1) return false;
+    list.splice(idx, 1);
+    this.persist();
+    bus.emit('scene:edited', scene);
+    return true;
+  }
+
+  addComponent(category, entityId, component) {
+    const entity = this.findEntity(category, entityId);
+    if (!entity) return null;
+    const comp = { id: nextEntityId('comp'), ...component };
+    entity.components.push(comp);
+    this.persist();
+    bus.emit('scene:edited', this.getActiveScene());
+    return comp;
+  }
+
+  removeComponent(category, entityId, componentId) {
+    const entity = this.findEntity(category, entityId);
+    if (!entity) return false;
+    const before = entity.components.length;
+    entity.components = entity.components.filter((c) => c.id !== componentId);
+    if (entity.components.length === before) return false;
+    this.persist();
+    bus.emit('scene:edited', this.getActiveScene());
+    return true;
+  }
+
+  /** Called after any direct field mutation (e.g. from the Property Inspector) to persist + notify. */
+  notifyEntityEdited() {
+    this.persist();
+    bus.emit('scene:edited', this.getActiveScene());
+  }
 }
 
 function bucketFor(category) {
-  return { platform: 'platforms', obstacle: 'obstacles', collectible: 'collectibles', trigger: 'triggers' }[category];
+  return CATEGORY_TO_BUCKET[category];
 }
 
-function hydrate(raw) {
+export function hydrate(raw) {
   return {
     id: raw.id,
     name: raw.name,
+    mode: raw.mode === 'topdown' ? 'topdown' : 'platformer',
     width: raw.width,
     height: raw.height,
     spawn: { ...raw.spawn },
@@ -215,13 +313,15 @@ function hydrate(raw) {
     obstacles: (raw.obstacles || []).map((o) => createObstacle(o)),
     collectibles: (raw.collectibles || []).map((c) => createCollectible(c)),
     triggers: (raw.triggers || []).map((t) => createTrigger({ ...t, nextScene: t.meta?.nextScene ?? null })),
+    actors: (raw.actors || []).map((a) => createActor(a)),
   };
 }
 
-function serialize(scene) {
+export function serialize(scene) {
   return {
     id: scene.id,
     name: scene.name,
+    mode: scene.mode,
     width: scene.width,
     height: scene.height,
     spawn: scene.spawn,
@@ -230,5 +330,6 @@ function serialize(scene) {
     obstacles: scene.obstacles.map((e) => e.toJSON()),
     collectibles: scene.collectibles.map((e) => e.toJSON()),
     triggers: scene.triggers.map((e) => e.toJSON()),
+    actors: scene.actors.map((e) => e.toJSON()),
   };
 }

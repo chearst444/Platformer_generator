@@ -11,20 +11,51 @@ import { AssetPalette } from './assetPalette.js';
 import { EnvironmentStyler } from './environmentStyler.js';
 import { SceneManagerUI } from './sceneManagerUI.js';
 import { DevConsole } from './console.js';
+import { DropZone } from './dropZone.js';
+import { AssetScriptManager } from './assetScriptManager.js';
+import { Outliner } from './outliner.js';
+import { PropertyInspector } from './propertyInspector.js';
 
 export class UIController {
-  constructor({ state, sceneManager, renderer, canvas }) {
+  constructor({ state, sceneManager, renderer, canvas, ingestionManager, historyStack }) {
     this.state = state;
     this.canvas = canvas;
+    this.historyStack = historyStack;
 
     this.inspector = new Inspector({ state });
     this.assetPalette = new AssetPalette({ state, sceneManager, renderer, canvas });
     this.environmentStyler = new EnvironmentStyler({ state, sceneManager });
     this.sceneManagerUI = new SceneManagerUI({ state, sceneManager });
-    this.devConsole = new DevConsole({ state, sceneManager });
+    this.outliner = new Outliner({ state, sceneManager });
+    this.propertyInspector = new PropertyInspector({ state, sceneManager });
+    this.devConsole = new DevConsole({ state, sceneManager, ingestionManager });
+    this.dropZone = new DropZone({ ingestionManager });
+    this.assetScriptManager = new AssetScriptManager({ ingestionManager });
 
     this._bindTopbar();
+    this._bindHistory();
     bus.on('player:died', () => this.devConsole._log('info', 'Player defeated — respawning at scene spawn.'));
+  }
+
+  _bindHistory() {
+    const undoBtn = document.getElementById('undo-btn');
+    const redoBtn = document.getElementById('redo-btn');
+
+    undoBtn.addEventListener('click', () => this.historyStack.undo());
+    redoBtn.addEventListener('click', () => this.historyStack.redo());
+
+    bus.on('history:changed', ({ canUndo, canRedo }) => {
+      undoBtn.disabled = !canUndo;
+      redoBtn.disabled = !canRedo;
+    });
+
+    window.addEventListener('keydown', (e) => {
+      const tag = document.activeElement?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return; // don't hijack native text-field undo
+      if (!(e.ctrlKey || e.metaKey)) return;
+      if (e.key.toLowerCase() === 'z' && !e.shiftKey) { e.preventDefault(); this.historyStack.undo(); }
+      else if (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey)) { e.preventDefault(); this.historyStack.redo(); }
+    });
   }
 
   _bindTopbar() {

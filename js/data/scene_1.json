@@ -1,6 +1,7 @@
 {
   "id": "scene_1",
   "name": "Grasslands",
+  "mode": "platformer",
   "width": 3200,
   "height": 540,
   "spawn": { "x": 64, "y": 400 },
@@ -34,5 +35,6 @@
   ],
   "triggers": [
     { "tileType": "exit", "x": 3140, "y": 396, "w": 32, "h": 96, "meta": { "nextScene": "scene_2" } }
-  ]
+  ],
+  "actors": []
 }

@@ -16,6 +16,8 @@
     </div>
     <div class="topbar-actions">
       <span id="fps-counter" class="fps-counter">60 fps</span>
+      <button id="undo-btn" class="btn" title="Undo (Ctrl+Z)" disabled>&#8630; Undo</button>
+      <button id="redo-btn" class="btn" title="Redo (Ctrl+Y)" disabled>&#8631; Redo</button>
       <button id="toggle-mode-btn" class="btn btn-accent" title="Toggle between Play and Edit mode">&#9998; Edit Mode</button>
       <button id="pause-btn" class="btn" title="Pause / resume the simulation">&#10074;&#10074; Pause</button>
     </div>
@@ -34,20 +36,42 @@
           <div class="hud-item" id="hud-scene">&#127760; <span id="hud-scene-val">-</span></div>
         </div>
         <div id="edit-banner" class="hidden">EDIT MODE &mdash; click / drag tiles from the palette onto the level</div>
+        <div id="overlay-root"></div>
       </div>
 
-      <!-- ============== DEVELOPER COMMAND CONSOLE ============== -->
+      <!-- ============== DEVELOPER COMMAND CONSOLE / ERROR LOG ============== -->
       <div id="console-panel">
-        <div id="console-log" aria-live="polite"></div>
-        <form id="console-form" autocomplete="off">
-          <span class="console-prompt">&gt;</span>
-          <input id="console-input" type="text" placeholder="/help for commands  e.g. /gravity 0.6, /spawn coin, /load scene_2" />
-        </form>
+        <div id="console-header">
+          <span id="console-title">&#9662; Developer Console</span>
+          <span id="console-error-badge" class="hidden">0</span>
+        </div>
+        <div id="console-body">
+          <div id="console-log" aria-live="polite"></div>
+          <form id="console-form" autocomplete="off">
+            <span class="console-prompt">&gt;</span>
+            <input id="console-input" type="text" placeholder="/help for commands  e.g. /gravity 0.6, /spawn coin, /load scene_2" />
+          </form>
+        </div>
       </div>
     </section>
 
     <!-- ============== SIDEBAR INSPECTOR ============== -->
     <aside id="sidebar">
+
+      <div class="panel" id="panel-dropzone">
+        <h2>Universal Drop Zone</h2>
+        <label id="drop-zone" for="drop-zone-input">
+          <span class="drop-zone-icon">&#8615;</span>
+          <span>Drag &amp; drop .js / .html / .css / .py files here<br /><span class="drop-zone-sub">or click to browse</span></span>
+        </label>
+        <input type="file" id="drop-zone-input" multiple accept=".js,.html,.htm,.css,.py" hidden />
+        <p id="bridge-status" class="bridge-status">checking local bridge&hellip;</p>
+      </div>
+
+      <div class="panel" id="panel-assets">
+        <h2>Asset &amp; Script Manager</h2>
+        <div id="asset-tree"></div>
+      </div>
 
       <div class="panel" id="panel-scenes">
         <h2>Scene Manager</h2>
@@ -56,9 +80,26 @@
           <button id="scene-new-btn" class="btn btn-small">+ New Scene</button>
         </div>
         <div class="field-row">
+          <label for="scene-mode-select">Scene mode</label>
+          <select id="scene-mode-select">
+            <option value="platformer">Platformer (gravity + jump)</option>
+            <option value="topdown">Top-Down (4-directional)</option>
+          </select>
+        </div>
+        <div class="field-row">
           <label for="scene-next-select">Links to next scene</label>
           <select id="scene-next-select"></select>
         </div>
+      </div>
+
+      <div class="panel" id="panel-outliner">
+        <h2>Node &amp; Component Hierarchy</h2>
+        <div id="outliner-tree"></div>
+      </div>
+
+      <div class="panel" id="panel-inspector">
+        <h2>Property Inspector</h2>
+        <div id="property-inspector"></div>
       </div>
 
       <div class="panel" id="panel-physics">
@@ -98,6 +139,10 @@
         <div class="palette-group">
           <h3>Triggers</h3>
           <div id="palette-triggers" class="palette-tray"></div>
+        </div>
+        <div class="palette-group">
+          <h3>Actors <span class="hint">(from dropped .js plugins)</span></h3>
+          <div id="palette-actors" class="palette-tray"></div>
         </div>
         <div class="palette-group">
           <label class="upload-label" for="sprite-upload">+ Upload custom sprite</label>

@@ -15,6 +15,7 @@ const TRAYS = {
   obstacle: 'palette-obstacles',
   collectible: 'palette-collectibles',
   trigger: 'palette-triggers',
+  actor: 'palette-actors',
 };
 
 export class AssetPalette {
@@ -38,7 +39,12 @@ export class AssetPalette {
       const tray = document.getElementById(elId);
       if (!tray) return;
       tray.innerHTML = '';
-      assetLoader.getByCategory(category).forEach((def) => {
+      const defs = assetLoader.getByCategory(category);
+      if (category === 'actor' && defs.length === 0) {
+        tray.innerHTML = '<span class="tray-empty">Drop a .js file that calls registerBehavior() to add one.</span>';
+        return;
+      }
+      defs.forEach((def) => {
         tray.appendChild(this._buildItem(def));
       });
     });
@@ -117,7 +123,22 @@ export class AssetPalette {
     });
 
     this.canvas.addEventListener('click', (e) => {
-      if (!this.state.editMode || !this.state.activeBrush) return;
+      if (!this.state.editMode) return;
+
+      if (!this.state.activeBrush) {
+        // No tool selected: clicking picks whatever's under the cursor for the
+        // Outliner / Property Inspector, same as clicking its row in the tree.
+        const { x, y } = worldToScene(this.canvas, this.renderer.camera, e.clientX, e.clientY);
+        const p = this.state.player;
+        if (x >= p.x && x <= p.x + p.width && y >= p.y && y <= p.y + p.height) {
+          this.state.select({ category: 'player', id: 'player' });
+          return;
+        }
+        const hit = this.sceneManager.findEntityAt(x, y);
+        this.state.select(hit ? { category: hit.category, id: hit.entity.id } : null);
+        return;
+      }
+
       if (this.state.activeBrush.category === 'eraser') {
         const { x, y } = worldToScene(this.canvas, this.renderer.camera, e.clientX, e.clientY);
         this.sceneManager.eraseAt(x, y);

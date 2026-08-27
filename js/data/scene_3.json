@@ -1,0 +1,36 @@
+{
+  "id": "scene_3",
+  "name": "Overworld (Top-Down)",
+  "mode": "topdown",
+  "width": 1600,
+  "height": 1200,
+  "spawn": { "x": 100, "y": 100 },
+  "background": { "color": "#2e7d32", "tileTint": "#5d4037", "groundColor": null },
+  "platforms": [
+    { "tileType": "stone", "x": 0,    "y": 0,    "w": 1600, "h": 32 },
+    { "tileType": "stone", "x": 0,    "y": 1168, "w": 1600, "h": 32 },
+    { "tileType": "stone", "x": 0,    "y": 0,    "w": 32,   "h": 1200 },
+    { "tileType": "stone", "x": 1568, "y": 0,    "w": 32,   "h": 1200 },
+    { "tileType": "brick", "x": 300,  "y": 200,  "w": 32,   "h": 400 },
+    { "tileType": "brick", "x": 700,  "y": 500,  "w": 500,  "h": 32 },
+    { "tileType": "brick", "x": 1100, "y": 200,  "w": 32,   "h": 500 },
+    { "tileType": "brick", "x": 500,  "y": 800,  "w": 400,  "h": 32 }
+  ],
+  "obstacles": [
+    { "tileType": "spike", "x": 650, "y": 650, "w": 32, "h": 32 }
+  ],
+  "collectibles": [
+    { "tileType": "coin",  "x": 150,  "y": 600 },
+    { "tileType": "coin",  "x": 500,  "y": 150 },
+    { "tileType": "gem",   "x": 900,  "y": 300 },
+    { "tileType": "coin",  "x": 1300, "y": 400 },
+    { "tileType": "heart", "x": 800,  "y": 1000 },
+    { "tileType": "coin",  "x": 1450, "y": 1100 },
+    { "tileType": "coin",  "x": 200,  "y": 1000 },
+    { "tileType": "coin",  "x": 1200, "y": 900 }
+  ],
+  "triggers": [
+    { "tileType": "exit", "x": 1500, "y": 1100, "w": 48, "h": 48, "meta": { "nextScene": "scene_1" } }
+  ],
+  "actors": []
+}

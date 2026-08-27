@@ -2,3 +2,7 @@ node_modules/
 .DS_Store
 *.log
 .vscode/
+
+# ingested files persisted by server/server.js at runtime — not source
+data/ingested/*/*
+!data/ingested/*/.gitkeep

@@ -6,6 +6,6 @@
 
 import { Entity } from './entity.js';
 
-export function createPlatform({ tileType = 'grass', x, y, w = 32, h = 32, tint = null, id = null }) {
-  return new Entity({ category: 'platform', tileType, x, y, w, h, tint, id });
+export function createPlatform({ tileType = 'grass', x, y, w = 32, h = 32, tint = null, id = null, meta = {}, components = [] }) {
+  return new Entity({ category: 'platform', tileType, x, y, w, h, tint, id, meta, components });
 }

@@ -12,11 +12,13 @@ export class SceneManagerUI {
     this.listEl = document.getElementById('scene-list');
     this.newBtn = document.getElementById('scene-new-btn');
     this.nextSelect = document.getElementById('scene-next-select');
+    this.modeSelect = document.getElementById('scene-mode-select');
 
     this._render();
     this._bind();
     bus.on('scenes:list-changed', () => this._render());
     bus.on('scene:changed', () => this._render());
+    bus.on('scene:edited', () => this._render());
   }
 
   _bind() {
@@ -30,6 +32,10 @@ export class SceneManagerUI {
     this.nextSelect.addEventListener('change', () => {
       const activeId = this.state.currentSceneId;
       this.sceneManager.setNextScene(activeId, this.nextSelect.value || null);
+    });
+
+    this.modeSelect.addEventListener('change', () => {
+      this.sceneManager.setMode(this.state.currentSceneId, this.modeSelect.value);
     });
   }
 
@@ -79,5 +85,7 @@ export class SceneManagerUI {
     });
     const currentLink = activeScene?.triggers?.[0]?.meta?.nextScene || '';
     this.nextSelect.value = currentLink;
+
+    if (activeScene) this.modeSelect.value = activeScene.mode;
   }
 }

@@ -3,6 +3,8 @@
 // the canvas every frame. Purely reads state; never mutates it.
 // ===========================================================
 
+import { effectiveBounds } from '../entities/entity.js';
+
 const TILE = 32;
 
 export class Renderer {
@@ -12,7 +14,7 @@ export class Renderer {
     this.state = state;
     this.assetLoader = assetLoader;
     this.sceneManager = sceneManager;
-    this.camera = { x: 0 };
+    this.camera = { x: 0, y: 0 };
   }
 
   draw() {
@@ -30,19 +32,21 @@ export class Renderer {
     // ---- sky ------------------------------------------------------
     ctx.fillStyle = scene.background.color;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    this._drawParallax(scene);
+    if (scene.mode !== 'topdown') this._drawParallax(scene);
 
     // ---- world space (camera translated) ---------------------------
     ctx.save();
-    ctx.translate(-Math.round(this.camera.x), 0);
+    ctx.translate(-Math.round(this.camera.x), -Math.round(this.camera.y));
 
     scene.platforms.forEach((p) => this._drawTile(p, scene));
     scene.triggers.forEach((t) => this._drawTrigger(t));
     scene.obstacles.forEach((o) => this._drawTile(o, scene));
+    scene.actors.forEach((a) => this._drawActor(a));
     scene.collectibles.forEach((c) => this._drawCollectible(c));
     this._drawPlayer();
+    this._drawSelectionHighlight(scene);
 
-    if (this.state.editMode) this._drawGrid(scene);
+    if (this.state.editMode) { this._drawGrid(scene); this._drawComponentOverlays(scene); }
     ctx.restore();
     ctx.restore();
 
@@ -51,11 +55,13 @@ export class Renderer {
 
   _updateCamera(scene) {
     const p = this.state.player;
-    const half = this.canvas.width / 2;
-    const target = clamp(p.x + p.width / 2 - half, 0, Math.max(0, scene.width - this.canvas.width));
+    const targetX = clamp(p.x + p.width / 2 - this.canvas.width / 2, 0, Math.max(0, scene.width - this.canvas.width));
+    const targetY = clamp(p.y + p.height / 2 - this.canvas.height / 2, 0, Math.max(0, scene.height - this.canvas.height));
     // simple smoothing so scene switches / edits don't jump-cut violently
-    this.camera.x += (target - this.camera.x) * 0.18;
-    if (Math.abs(target - this.camera.x) < 0.5) this.camera.x = target;
+    this.camera.x += (targetX - this.camera.x) * 0.18;
+    this.camera.y += (targetY - this.camera.y) * 0.18;
+    if (Math.abs(targetX - this.camera.x) < 0.5) this.camera.x = targetX;
+    if (Math.abs(targetY - this.camera.y) < 0.5) this.camera.y = targetY;
   }
 
   _drawParallax(scene) {
@@ -95,7 +101,7 @@ export class Renderer {
       return;
     }
     ctx.fillStyle = tint;
-    if (entity.category === 'obstacle' && def?.id === 'spike') {
+    if (entity.category === 'obstacle' && def?.id === 'spike' && scene.mode !== 'topdown') {
       ctx.beginPath();
       const n = Math.max(1, Math.round(entity.w / 16));
       const step = entity.w / n;
@@ -138,7 +144,8 @@ export class Renderer {
     if (c.collected) return;
     const { ctx } = this;
     const def = this.assetLoader.getDef(c.tileType);
-    const bob = Math.sin(performance.now() / 260 + c.phase) * 4;
+    const rotationSpeed = c.meta?.rotationSpeed ?? 1; // Property Inspector field — scales the idle bob rate
+    const bob = Math.sin((performance.now() / 260) * rotationSpeed + c.phase) * 4;
     const tint = c.tint || def?.color || '#ffd54f';
 
     if (def?.image) {
@@ -155,6 +162,27 @@ export class Renderer {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.restore();
+  }
+
+  /** Draws a plugin-registered actor as a tinted icon box (same visual language as built-in tiles). */
+  _drawActor(entity) {
+    const { ctx } = this;
+    const def = this.assetLoader.getDef(entity.tileType) || { color: '#666', icon: '?' };
+    const tint = entity.tint || def.color;
+    roundRect(ctx, entity.x, entity.y, entity.w, entity.h, 6);
+    ctx.fillStyle = tint;
+    ctx.fill();
+    ctx.strokeStyle = shade(tint, -25);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    if (def.icon) {
+      ctx.fillStyle = '#fff';
+      ctx.font = `${Math.round(entity.h * 0.55)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(def.icon, entity.x + entity.w / 2, entity.y + entity.h / 2 + 1);
+      ctx.textBaseline = 'alphabetic';
+    }
   }
 
   _drawPlayer() {
@@ -179,6 +207,48 @@ export class Renderer {
     ctx.restore();
   }
 
+  /** Edit-mode-only: dashed cyan box over any entity carrying a Collision Box component. */
+  _drawComponentOverlays(scene) {
+    const { ctx } = this;
+    const buckets = [scene.platforms, scene.obstacles, scene.collectibles, scene.triggers, scene.actors];
+    ctx.save();
+    ctx.strokeStyle = '#00e5ff';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([3, 3]);
+    for (const list of buckets) {
+      for (const entity of list) {
+        if (!entity.components.some((c) => c.type === 'collision')) continue;
+        const r = effectiveBounds(entity);
+        ctx.strokeRect(r.left, r.top, r.right - r.left, r.bottom - r.top);
+      }
+    }
+    ctx.restore();
+  }
+
+  /** Dashed highlight around whatever the Outliner / Property Inspector has selected. */
+  _drawSelectionHighlight(scene) {
+    const sel = this.state.selection;
+    if (!sel) return;
+    const { ctx } = this;
+    let r = null;
+    if (sel.category === 'player') {
+      const p = this.state.player;
+      r = { left: p.x, top: p.y, right: p.x + p.width, bottom: p.y + p.height };
+    } else {
+      const category = sel.category === 'component' ? sel.parentCategory : sel.category;
+      const id = sel.category === 'component' ? sel.parentId : sel.id;
+      const entity = this.sceneManager.findEntity(category, id);
+      if (entity) r = entity.bounds;
+    }
+    if (!r) return;
+    ctx.save();
+    ctx.strokeStyle = '#ffcf5c';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 3]);
+    ctx.strokeRect(r.left - 3, r.top - 3, r.right - r.left + 6, r.bottom - r.top + 6);
+    ctx.restore();
+  }
+
   _drawGrid(scene) {
     const { ctx, canvas } = this;
     ctx.save();
@@ -187,11 +257,12 @@ export class Renderer {
     const startX = Math.floor(this.camera.x / TILE) * TILE;
     for (let x = startX; x < this.camera.x + canvas.width + TILE; x += TILE) {
       ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, scene.height);
+      ctx.moveTo(x, this.camera.y);
+      ctx.lineTo(x, this.camera.y + canvas.height);
       ctx.stroke();
     }
-    for (let y = 0; y < scene.height; y += TILE) {
+    const startY = Math.floor(this.camera.y / TILE) * TILE;
+    for (let y = startY; y < this.camera.y + canvas.height + TILE; y += TILE) {
       ctx.beginPath();
       ctx.moveTo(this.camera.x, y);
       ctx.lineTo(this.camera.x + canvas.width, y);
@@ -215,7 +286,7 @@ export function worldToScene(canvas, camera, clientX, clientY) {
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
   const x = (clientX - rect.left) * scaleX + camera.x;
-  const y = (clientY - rect.top) * scaleY;
+  const y = (clientY - rect.top) * scaleY + camera.y;
   return { x, y };
 }
 

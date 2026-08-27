@@ -8,12 +8,13 @@
 // .json files when hand-editing the default levels.
 // ===========================================================
 
-export const DEFAULT_MANIFEST = { scenes: ['scene_1', 'scene_2'], startScene: 'scene_1' };
+export const DEFAULT_MANIFEST = { scenes: ['scene_1', 'scene_2', 'scene_3'], startScene: 'scene_1' };
 
 export const DEFAULT_SCENES = {
   scene_1: {
     id: 'scene_1',
     name: 'Grasslands',
+    mode: 'platformer',
     width: 3200,
     height: 540,
     spawn: { x: 64, y: 400 },
@@ -48,11 +49,13 @@ export const DEFAULT_SCENES = {
     triggers: [
       { tileType: 'exit', x: 3140, y: 396, w: 32, h: 96, meta: { nextScene: 'scene_2' } },
     ],
+    actors: [],
   },
 
   scene_2: {
     id: 'scene_2',
     name: 'Ice Caverns',
+    mode: 'platformer',
     width: 2400,
     height: 540,
     spawn: { x: 64, y: 400 },
@@ -84,8 +87,46 @@ export const DEFAULT_SCENES = {
       { tileType: 'coin', x: 2250, y: 440 },
     ],
     triggers: [
-      { tileType: 'exit', x: 2340, y: 396, w: 32, h: 96, meta: { nextScene: 'scene_1' } },
+      { tileType: 'exit', x: 2340, y: 396, w: 32, h: 96, meta: { nextScene: 'scene_3' } },
     ],
+    actors: [],
+  },
+
+  scene_3: {
+    id: 'scene_3',
+    name: 'Overworld (Top-Down)',
+    mode: 'topdown',
+    width: 1600,
+    height: 1200,
+    spawn: { x: 100, y: 100 },
+    background: { color: '#2e7d32', tileTint: '#5d4037', groundColor: null },
+    platforms: [
+      { tileType: 'stone', x: 0, y: 0, w: 1600, h: 32 },
+      { tileType: 'stone', x: 0, y: 1168, w: 1600, h: 32 },
+      { tileType: 'stone', x: 0, y: 0, w: 32, h: 1200 },
+      { tileType: 'stone', x: 1568, y: 0, w: 32, h: 1200 },
+      { tileType: 'brick', x: 300, y: 200, w: 32, h: 400 },
+      { tileType: 'brick', x: 700, y: 500, w: 500, h: 32 },
+      { tileType: 'brick', x: 1100, y: 200, w: 32, h: 500 },
+      { tileType: 'brick', x: 500, y: 800, w: 400, h: 32 },
+    ],
+    obstacles: [
+      { tileType: 'spike', x: 650, y: 650, w: 32, h: 32 },
+    ],
+    collectibles: [
+      { tileType: 'coin', x: 150, y: 600 },
+      { tileType: 'coin', x: 500, y: 150 },
+      { tileType: 'gem', x: 900, y: 300 },
+      { tileType: 'coin', x: 1300, y: 400 },
+      { tileType: 'heart', x: 800, y: 1000 },
+      { tileType: 'coin', x: 1450, y: 1100 },
+      { tileType: 'coin', x: 200, y: 1000 },
+      { tileType: 'coin', x: 1200, y: 900 },
+    ],
+    triggers: [
+      { tileType: 'exit', x: 1500, y: 1100, w: 48, h: 48, meta: { nextScene: 'scene_1' } },
+    ],
+    actors: [],
   },
 };
 
@@ -93,6 +134,7 @@ export function blankScene(id, name) {
   return {
     id,
     name,
+    mode: 'platformer',
     width: 1920,
     height: 540,
     spawn: { x: 64, y: 400 },
@@ -101,5 +143,6 @@ export function blankScene(id, name) {
     obstacles: [],
     collectibles: [],
     triggers: [],
+    actors: [],
   };
 }

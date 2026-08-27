@@ -5,15 +5,22 @@
 // {left,right,jump} shape later without touching physics code.
 // ===========================================================
 
+// Each key can map to multiple simultaneous actions: ArrowUp/W means "jump"
+// in platformer scenes and "up" in top-down scenes — PhysicsEngine picks
+// whichever it needs based on the active scene's mode.
 const KEY_MAP = {
-  ArrowLeft: 'left', a: 'left', A: 'left',
-  ArrowRight: 'right', d: 'right', D: 'right',
-  ArrowUp: 'jump', w: 'jump', W: 'jump', ' ': 'jump',
+  ArrowLeft: ['left'], a: ['left'], A: ['left'],
+  ArrowRight: ['right'], d: ['right'], D: ['right'],
+  ArrowUp: ['jump', 'up'], w: ['jump', 'up'], W: ['jump', 'up'],
+  ArrowDown: ['down'], s: ['down'], S: ['down'],
+  ' ': ['jump'],
 };
+
+const PREVENT_DEFAULT_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ']);
 
 export class Input {
   constructor(target = window) {
-    this.state = { left: false, right: false, jump: false };
+    this.state = { left: false, right: false, up: false, down: false, jump: false };
     this._enabled = true;
     this._onKeyDown = (e) => this._handle(e, true);
     this._onKeyUp = (e) => this._handle(e, false);
@@ -22,17 +29,16 @@ export class Input {
   }
 
   _handle(e, isDown) {
-    const action = KEY_MAP[e.key];
-    if (!action) return;
+    const actions = KEY_MAP[e.key];
+    if (!actions) return;
     if (!this._enabled) return;
-    // avoid scrolling the page on space/arrows while the game has focus
-    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', ' '].includes(e.key)) e.preventDefault();
-    this.state[action] = isDown;
+    if (PREVENT_DEFAULT_KEYS.has(e.key)) e.preventDefault();
+    actions.forEach((action) => { this.state[action] = isDown; });
   }
 
   setEnabled(on) {
     this._enabled = on;
-    if (!on) { this.state.left = this.state.right = this.state.jump = false; }
+    if (!on) { this.state.left = this.state.right = this.state.up = this.state.down = this.state.jump = false; }
   }
 
   destroy() {

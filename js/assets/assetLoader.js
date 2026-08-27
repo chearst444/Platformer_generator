@@ -87,6 +87,18 @@ export class AssetLoader {
     });
   }
 
+  /**
+   * Register a definition with no image (used by BehaviorRegistry when a
+   * dropped .js plugin calls registerBehavior — it becomes a placeable
+   * "actor" tile drawn as a tinted icon box, same as the built-ins).
+   */
+  registerDynamicDef({ id, category, label, color = '#9b59b6', icon = '★' }) {
+    const def = { id, category, label, color, icon, solid: false, dynamic: true };
+    this.defs.set(id, def);
+    bus.emit('assets:changed', this.getAllDefs());
+    return def;
+  }
+
   /** Rehydrate a custom def previously serialized into a scene JSON (dataUrl only). */
   registerFromDataUrl(id, category, label, dataUrl) {
     return new Promise((resolve) => {

@@ -37,6 +37,12 @@ export class GameState {
     this.editMode = false;
     this.paused = false;
     this.activeBrush = null; // { category, tileType } selected in the palette / eraser
+    this.selection = null;   // { category: 'player'|'platform'|..., id } — Outliner / Property Inspector target
+
+    // A stale selection (an entity from a scene we've left, or one that was
+    // undone away) is worse than none — drop it whenever the active scene
+    // changes identity.
+    bus.on('scene:changed', () => this.clearSelection());
   }
 
   // ---- physics -------------------------------------------------
@@ -95,6 +101,16 @@ export class GameState {
   setActiveBrush(brush) {
     this.activeBrush = brush;
     bus.emit('brush:changed', this.activeBrush);
+  }
+
+  // ---- selection (Outliner / Property Inspector) ----------------
+  select(ref) {
+    this.selection = ref; // { category, id } or null
+    bus.emit('selection:changed', this.selection);
+  }
+
+  clearSelection() {
+    if (this.selection) this.select(null);
   }
 }
 

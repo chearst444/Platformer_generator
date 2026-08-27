@@ -1,0 +1,16 @@
+/* ===========================================================
+   Example: live editor re-skin.
+   Drag this file onto the Universal Drop Zone to instantly
+   restyle the editor chrome (not the game canvas) — proves
+   .css ingestion hot-applies without a page reload. Toggle it
+   off in the Asset & Script Manager to revert.
+   =========================================================== */
+
+#topbar, #sidebar, .panel {
+  background: #0a0d12 !important;
+  border-color: #ff2e88 !important;
+}
+
+.brand-name { color: #ff6ec7; }
+.panel h2 { color: #ff6ec7; }
+.val-badge { color: #ff6ec7; background: rgba(255,110,199,.12); }

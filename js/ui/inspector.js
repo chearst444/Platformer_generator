@@ -33,6 +33,7 @@ export class Inspector {
         const value = parseFloat(slider.value);
         this.badges[key].textContent = formatVal(value);
         this.state.updatePhysics({ [key]: value }, { silent: true }); // silent: avoid re-syncing the slider we're actively dragging
+        bus.emit('physics:touched'); // lets HistoryStack capture an undo step for this drag gesture
       });
     });
   }

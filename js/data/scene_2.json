@@ -1,6 +1,7 @@
 {
   "id": "scene_2",
   "name": "Ice Caverns",
+  "mode": "platformer",
   "width": 2400,
   "height": 540,
   "spawn": { "x": 64, "y": 400 },
@@ -32,6 +33,7 @@
     { "tileType": "coin",  "x": 2250, "y": 440 }
   ],
   "triggers": [
-    { "tileType": "exit", "x": 2340, "y": 396, "w": 32, "h": 96, "meta": { "nextScene": "scene_1" } }
-  ]
+    { "tileType": "exit", "x": 2340, "y": 396, "w": 32, "h": 96, "meta": { "nextScene": "scene_3" } }
+  ],
+  "actors": []
 }
