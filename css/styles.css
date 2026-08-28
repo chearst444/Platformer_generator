@@ -70,6 +70,9 @@ html, body{
 .btn-small{ padding:4px 9px; font-size:12px; }
 .btn-accent{ background: linear-gradient(180deg,#2c6fa0,#1f4f75); border-color:#2c6fa0; color:#eaf6ff;}
 .btn-accent.active{ background: linear-gradient(180deg,#a06c2c,#754f1f); border-color:#a06c2c; }
+.btn-export{ background: linear-gradient(180deg,#2ca06f,#1f7554); border-color:#2ca06f; color:#eafff6; }
+.btn-export:hover{ background: linear-gradient(180deg,#33b47c,#238660); }
+.btn-export:disabled{ opacity:.5; cursor:wait; }
 .btn-danger{ color: var(--danger); }
 .btn-danger.active{ background: rgba(255,107,107,.18); border-color: var(--danger); }
 .btn:disabled{ opacity:.4; cursor: default; }

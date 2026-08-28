@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>__GAME_TITLE__</title>
+<style>
+  :root{ --bg:#0e1116; }
+  *{ box-sizing:border-box; }
+  html,body{
+    height:100%; margin:0; background:var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  #canvas-wrap{
+    position:relative; line-height:0; overflow:hidden;
+    border-radius:8px; box-shadow:0 8px 30px rgba(0,0,0,.5);
+    max-width:100vw; max-height:100vh;
+  }
+  #game-canvas{ display:block; background:#5c94fc; max-width:100%; height:auto; }
+  #hud{ position:absolute; top:8px; left:8px; display:flex; gap:10px; pointer-events:none; }
+  .hud-item{
+    background:rgba(10,12,16,.55); border:1px solid rgba(255,255,255,.12); border-radius:6px;
+    padding:3px 9px; font-size:13px; color:#fff;
+    font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  #overlay-root{ position:absolute; inset:0; pointer-events:none; }
+  .user-overlay{ position:absolute; inset:0; pointer-events:auto; color:#fff; font-family:inherit; }
+  /*__INGESTED_STYLES__*/
+</style>
+</head>
+<body>
+  <div id="canvas-wrap">
+    <canvas id="game-canvas" width="__CANVAS_W__" height="__CANVAS_H__" tabindex="0"></canvas>
+    <div id="hud">
+      <div class="hud-item">&hearts; <span id="hud-health-val">100</span></div>
+      <div class="hud-item">&#9733; <span id="hud-score-val">0</span></div>
+      <div class="hud-item">&#127942; <span id="hud-inventory-val">0</span></div>
+      <div class="hud-item">&#127760; <span id="hud-scene-val">-</span></div>
+    </div>
+    <div id="overlay-root"><!--__INGESTED_OVERLAYS__--></div>
+  </div>
+
+<script>window.__GAME_DATA__ = __GAME_DATA_JSON__;</script>
+<!--__RUNTIME_PART_1__-->
+<!--__INGESTED_SCRIPTS__-->
+<!--__RUNTIME_PART_2__-->
+</body>
+</html>

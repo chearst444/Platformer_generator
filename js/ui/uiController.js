@@ -16,9 +16,10 @@ import { AssetScriptManager } from './assetScriptManager.js';
 import { Outliner } from './outliner.js';
 import { PropertyInspector } from './propertyInspector.js';
 import { CanvasEditor } from './canvasEditor.js';
+import { GameExporter } from '../export/gameExporter.js';
 
 export class UIController {
-  constructor({ state, sceneManager, renderer, canvas, ingestionManager, historyStack }) {
+  constructor({ state, sceneManager, renderer, canvas, ingestionManager, historyStack, assetLoader }) {
     this.state = state;
     this.canvas = canvas;
     this.historyStack = historyStack;
@@ -30,13 +31,33 @@ export class UIController {
     this.sceneManagerUI = new SceneManagerUI({ state, sceneManager });
     this.outliner = new Outliner({ state, sceneManager });
     this.propertyInspector = new PropertyInspector({ state, sceneManager });
-    this.devConsole = new DevConsole({ state, sceneManager, ingestionManager });
+    this.gameExporter = new GameExporter({ state, sceneManager, assetLoader, ingestionManager, canvas });
+    this.devConsole = new DevConsole({ state, sceneManager, ingestionManager, gameExporter: this.gameExporter });
     this.dropZone = new DropZone({ ingestionManager });
     this.assetScriptManager = new AssetScriptManager({ ingestionManager });
 
     this._bindTopbar();
     this._bindHistory();
+    this._bindExport();
     bus.on('player:died', () => this.devConsole._log('info', 'Player defeated — respawning at scene spawn.'));
+  }
+
+  _bindExport() {
+    const exportBtn = document.getElementById('export-btn');
+    exportBtn.addEventListener('click', async () => {
+      exportBtn.disabled = true;
+      const original = exportBtn.textContent;
+      exportBtn.textContent = '⏳ Exporting…';
+      try {
+        const { filename, sceneCount } = await this.gameExporter.export();
+        bus.emit('console:log', { kind: 'ok', text: `exported "${filename}" (${sceneCount} scene${sceneCount === 1 ? '' : 's'}) — open it directly in any browser, no server needed.` });
+      } catch (err) {
+        bus.emit('console:log', { kind: 'err', text: `export failed: ${err.message}` });
+      } finally {
+        exportBtn.disabled = false;
+        exportBtn.textContent = original;
+      }
+    });
   }
 
   _bindHistory() {

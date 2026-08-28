@@ -19,10 +19,11 @@ const PHYSICS_RANGES = {
 const HEX_RE = /^#?([0-9a-f]{6})$/i;
 
 export class DevConsole {
-  constructor({ state, sceneManager, ingestionManager }) {
+  constructor({ state, sceneManager, ingestionManager, gameExporter }) {
     this.state = state;
     this.sceneManager = sceneManager;
     this.ingestionManager = ingestionManager;
+    this.gameExporter = gameExporter;
     this.logEl = document.getElementById('console-log');
     this.form = document.getElementById('console-form');
     this.input = document.getElementById('console-input');
@@ -172,6 +173,7 @@ const COMMANDS = {
       '/runscript <file.py> [--scene]  run an ingested Python script (via the local bridge)',
       '/unload <file>               disable an ingested asset',
       '/assets                      list all ingested files',
+      '/export                      download a standalone, offline-playable HTML build',
       '(Ctrl+Z / Ctrl+Y undo/redo placements, slider tweaks and styling — see the topbar)',
     ].forEach((l) => self._log('info', l));
   },
@@ -295,5 +297,11 @@ const COMMANDS = {
     const list = self.ingestionManager.list();
     if (!list.length) { self._log('info', 'no assets ingested yet — drag files onto the Universal Drop Zone.'); return; }
     list.forEach((a) => self._log('info', `${a.category}/${a.filename}${a.enabled ? '' : ' (disabled)'}`));
+  },
+
+  async export(self) {
+    self._log('info', 'building export…');
+    const { filename, sceneCount } = await self.gameExporter.export();
+    self._log('ok', `exported "${filename}" (${sceneCount} scene${sceneCount === 1 ? '' : 's'}) — open it directly in any browser, no server needed.`);
   },
 };

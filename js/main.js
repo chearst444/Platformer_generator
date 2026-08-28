@@ -36,7 +36,7 @@ async function bootstrap() {
   await sceneManager.init(); // loads scene JSON (or embedded fallback) + applies any saved edits
   historyStack.arm(); // starts watching for design-time edits to make undoable
 
-  new UIController({ state, sceneManager, renderer, canvas, ingestionManager, historyStack });
+  new UIController({ state, sceneManager, renderer, canvas, ingestionManager, historyStack, assetLoader });
 
   const loop = new GameLoop({ physics, renderer });
   loop.start();

@@ -34,7 +34,10 @@ export class AssetLoader {
   constructor() {
     /** @type {Map<string, object>} tileType id -> definition (may include custom img) */
     this.defs = new Map();
-    BUILT_IN_DEFS.forEach((d) => this.defs.set(d.id, { ...d }));
+    // `builtin: true` lets GameExporter tell these apart from custom/dynamic
+    // defs — the exported player runtime already has BUILT_IN_DEFS baked in,
+    // so only non-builtin defs need to travel with the export.
+    BUILT_IN_DEFS.forEach((d) => this.defs.set(d.id, { ...d, builtin: true }));
   }
 
   getDef(tileTypeId) {
